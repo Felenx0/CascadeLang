@@ -59,11 +59,10 @@ public:
         }
 
         m_index = 0;
-
         return tokens;
     }
 private:
-    [[nodiscard]] optional<char> peek(int offset = 1) const {
+    [[nodiscard]] inline optional<char> peek(int offset = 1) const {
         if (m_index + offset > m_src.length()) {
             return {};
         }
@@ -72,10 +71,10 @@ private:
         }
     }
 
-    char consume() {
+    inline char consume() {
         return m_src.at(m_index++);
     }
 
     const string m_src;
-    int m_index = 0;
+    size_t m_index = 0;
 };
