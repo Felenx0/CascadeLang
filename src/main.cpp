@@ -5,26 +5,8 @@
 using namespace std;
 
 #include "tokenization.hpp"
-
-string tokens_to_asm(const vector<Token>& tokens) {
-    stringstream output;
-    output << "global _start\n_start:\n";
-
-    for (int i = 0; i < tokens.size(); i++) {
-        const Token& token = tokens.at(i);
-        if (token.type == TokenType::_exit) {
-            if (i + 1 < tokens.size() && tokens.at(i+1).type == TokenType::int_lit) {
-                if (i + 2 < tokens.size() && tokens.at(i+2).type == TokenType::semi) {
-                    output << "    mov rax, 60\n";
-                    output << "    mov rdi, " << tokens.at(i+1).value.value() << "\n";
-                    output << "    syscall";
-                }
-            }
-        }
-    }
-
-    return output.str();
-}
+#include "parse.hpp"
+#include "generation.hpp"
 
 int main(int argc, char const *argv[]) {
     if (argc != 2) {
@@ -43,9 +25,7 @@ int main(int argc, char const *argv[]) {
                 continue;
             }
         }
-    }
 
-    {
         string f_type; // File type
         bool is_dot = false;
 
@@ -78,12 +58,20 @@ int main(int argc, char const *argv[]) {
         contents = contents_stream.str();
     }
 
-    Tokenizer tokenizer(contents);
+    Tokenizer tokenizer(move(contents));
     vector<Token> tokens = tokenizer.tokenize();
 
-    {
+    Parser parser(move(tokens));
+    optional<NodeExit> tree = parser.parse();
+
+    if (!tree.has_value()) {
+        cerr << "No exit statement found" << endl;
+        exit(EXIT_FAILURE);
+    }
+
+    Generator generator(tree.value()); {
         fstream file("out.asm", ios::out);
-        file << tokens_to_asm(tokens);
+        file << generator.generate();
     }
 
     system("nasm -felf64 out.asm");
