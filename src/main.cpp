@@ -76,5 +76,6 @@ int main(int argc, char const *argv[]) {
 
     system("nasm -felf64 out.asm");
     system("ld -o out out.o");
+
     return EXIT_SUCCESS;
 }
