@@ -78,7 +78,8 @@ int main(int argc, char const *argv[]) {
         contents = contents_stream.str();
     }
 
-    vector<Token> tokens = tokenize(contents);
+    Tokenizer tokenizer(contents);
+    vector<Token> tokens = tokenizer.tokenize();
 
     {
         fstream file("out.asm", ios::out);

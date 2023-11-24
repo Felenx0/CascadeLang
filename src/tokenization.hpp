@@ -14,51 +14,68 @@ struct Token {
     optional<string> value;
 };
 
-vector<Token> tokenize(const string& str) {
-    string buf;
-    vector<Token> tokens;
+class Tokenizer {
+public:
+    inline explicit Tokenizer(string src) : m_src(move(src)) {}
 
-    for (int i = 0; i < str.size(); i++) {
-        char c = str.at(i);
-        if (isalpha(c)) {
-            buf.push_back(c);
-            i++;
-            while (isalnum(str.at(i))) {
-                buf.push_back(str.at(i));
-                i++;
+    inline vector<Token> tokenize() {
+        string buf;
+        vector<Token> tokens;
+
+        while (peek().has_value()) {
+            if (isalpha(peek().value())) {
+                buf.push_back(consume());
+                while (peek().has_value() && isalnum(peek().value())) {
+                    buf.push_back(consume());
+                }
+                if (buf == "exit") {
+                    tokens.push_back({.type = TokenType::_exit});
+                    buf.clear();
+                }
+                else {
+                    cerr << "You messed up!" << endl;
+                    exit(EXIT_FAILURE);
+                }
             }
-            i--;
-            if (buf == "exit") {
-                tokens.push_back({.type = TokenType::_exit});
+            else if (isdigit(peek().value())) {
+                buf.push_back(consume());
+                while (peek().has_value() && isdigit(peek().value())) {
+                    buf.push_back(consume());
+                }
+                tokens.push_back({.type = TokenType::int_lit, .value = buf});
                 buf.clear();
+            }
+            else if (peek().value() == ';') {
+                tokens.push_back({.type = TokenType::semi});
+                consume();
+            }
+            else if (isspace(peek().value())) {
+                consume();
             }
             else {
                 cerr << "You messed up!" << endl;
                 exit(EXIT_FAILURE);
             }
         }
-        else if (isdigit(c)) {
-            buf.push_back(c);
-            i++;
-            while (isdigit(str.at(i))) {
-                buf.push_back(str.at(i));
-                i++;
-            }
-            i--;
-            tokens.push_back({.type = TokenType::int_lit, .value = buf});
-            buf.clear();
-        }
-        else if (c == ';') {
-            tokens.push_back({.type = TokenType::semi});
-        }
-        else if (isspace(c)) {
-            continue;
+
+        m_index = 0;
+
+        return tokens;
+    }
+private:
+    [[nodiscard]] optional<char> peek(int offset = 1) const {
+        if (m_index + offset > m_src.length()) {
+            return {};
         }
         else {
-            cerr << "You messed up!" << endl;
-            exit(EXIT_FAILURE);
+            return m_src.at(m_index);
         }
     }
 
-    return tokens;
-}
+    char consume() {
+        return m_src.at(m_index++);
+    }
+
+    const string m_src;
+    int m_index = 0;
+};
