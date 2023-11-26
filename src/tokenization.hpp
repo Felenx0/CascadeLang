@@ -6,7 +6,12 @@
 enum TokenType {
     _exit,
     int_lit,
-    semi
+    semi,
+    open_param,
+    close_param,
+    ident,
+    let,
+    eq
 };
 
 struct Token {
@@ -32,9 +37,13 @@ public:
                     tokens.push_back({.type = TokenType::_exit});
                     buf.clear();
                 }
+                else if (buf == "let") {
+                    tokens.push_back({.type = TokenType::let});
+                    buf.clear();
+                }
                 else {
-                    cerr << "You messed up!" << endl;
-                    exit(EXIT_FAILURE);
+                    tokens.push_back({.type = TokenType::ident, .value = buf});
+                    buf.clear();
                 }
             }
             else if (isdigit(peek().value())) {
@@ -45,9 +54,21 @@ public:
                 tokens.push_back({.type = TokenType::int_lit, .value = buf});
                 buf.clear();
             }
-            else if (peek().value() == ';') {
-                tokens.push_back({.type = TokenType::semi});
+            else if (peek().value() == '(') {
                 consume();
+                tokens.push_back({.type = TokenType::open_param});
+            }
+            else if (peek().value() == ')') {
+                consume();
+                tokens.push_back({.type = TokenType::close_param});
+            }
+            else if (peek().value() == ';') {
+                consume();
+                tokens.push_back({.type = TokenType::semi});
+            }
+            else if (peek().value() == '=') {
+                consume();
+                tokens.push_back({.type = TokenType::eq});
             }
             else if (isspace(peek().value())) {
                 consume();

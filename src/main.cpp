@@ -1,11 +1,12 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <string>
 
 using namespace std;
 
 #include "tokenization.hpp"
-#include "parse.hpp"
+#include "parser.hpp"
 #include "generation.hpp"
 
 int main(int argc, char const *argv[]) {
@@ -62,16 +63,16 @@ int main(int argc, char const *argv[]) {
     vector<Token> tokens = tokenizer.tokenize();
 
     Parser parser(move(tokens));
-    optional<NodeExit> tree = parser.parse();
+    optional<NodeProg> prog = parser.parse_prog();
 
-    if (!tree.has_value()) {
-        cerr << "No exit statement found" << endl;
+    if (!prog.has_value()) {
+        cerr << "Invalid program" << endl;
         exit(EXIT_FAILURE);
     }
-
-    Generator generator(tree.value()); {
+    /**/
+    Generator generator(prog.value()); {
         fstream file("out.asm", ios::out);
-        file << generator.generate();
+        file << generator.gen_prog();
     }
 
     system("nasm -felf64 out.asm");
