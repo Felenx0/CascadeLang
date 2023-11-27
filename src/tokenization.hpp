@@ -11,7 +11,8 @@ enum TokenType {
     close_param,
     ident,
     let,
-    eq
+    eq,
+    plus
 };
 
 struct Token {
@@ -21,7 +22,7 @@ struct Token {
 
 class Tokenizer {
 public:
-    inline explicit Tokenizer(string src) : m_src(move(src)) {}
+    inline explicit Tokenizer(string src) : m_src(std::move(src)) {}
 
     inline vector<Token> tokenize() {
         string buf;
@@ -69,6 +70,10 @@ public:
             else if (peek().value() == '=') {
                 consume();
                 tokens.push_back({.type = TokenType::eq});
+            }
+            else if (peek().value() == '+') {
+                consume();
+                tokens.push_back({.type = TokenType::plus});
             }
             else if (isspace(peek().value())) {
                 consume();
